@@ -13,8 +13,8 @@
 
 package ${package_name}.entity;
 
-import com.baomidou.mybatisplus.annotations.TableField;
-import com.baomidou.mybatisplus.annotations.TableName;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import lombok.Data;
@@ -26,7 +26,7 @@ import lombok.Data;
 */
 @Data
 @TableName("${table_name_small}")
-public class ${table_name}{
+public class ${table_name} extends BaseEntity{
 	/**
 	 * 
 	 */
@@ -84,6 +84,13 @@ public class ${table_name}{
     @TableField("${model.columnName}")
     @Column(name = "${model.columnName}",length = ${model.columnLength},nullable = <#if (model.columnNullable = 'NO')>false<#else>true</#if>)
     private BigDecimal ${model.changeColumnName?uncap_first};
+
+    </#if>
+
+    <#if model.columnType = 'DATETIME' >
+    @TableField("${model.columnName}")
+    @Column(name = "${model.columnName}",length = ${model.columnLength},nullable = <#if (model.columnNullable = 'NO')>false<#else>true</#if>)
+    private Date ${model.changeColumnName?uncap_first};
 
     </#if>
         </#list>

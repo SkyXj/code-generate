@@ -44,12 +44,21 @@ public class GenerateServiceImpl implements GenerateService {
     private static String tableAnnotation = "";
     private static String tableName = "";
     private static String changeTableName = "";
+    private static String vueComponentName= "";
+    //模块名
+    private String modular= "";
     private String[] replacestrs = new String[]{"name", "index"};
     private ZipOutputStream zipout;
     private String groupId;
     private String artifactId;
     private String company;
     private Connection connection=null;
+    private List<String> tableNames;
+
+    private String filedPreix;
+
+    private String[] baseFileds=new String[]{"del_flag","create_by","update_by","create_time","update_time"};
+//    private String[] tableNames=new String[]{"hx_link_group_factor"};
 
     @Override
     public void codeGenerate(GenerateProperties properties, ZipOutputStream zipout) {
@@ -61,21 +70,29 @@ public class GenerateServiceImpl implements GenerateService {
         this.PASSWORD = properties.getPassword();
         this.DRIVER = properties.getDriver();
         this.packageName = properties.getPackagename();
+        this.modular = properties.getModular();
 //        this.diskPath = properties.getDiskPath();
         this.tablesuffix = properties.getTablesuffix() == null ? "" : properties.getTablesuffix();
         this.zipout = zipout;
         this.groupId=properties.getGroupId();
         this.artifactId=properties.getArtifactId();
         this.company=properties.getCompany();
+        this.tableNames=properties.getTables()==""?null:Arrays.asList(properties.getTables().split(";"));
+
         ResultSet tables = null;
         try {
             tables = getTables();
             while (tables.next()) {
                 tableName = tables.getString("TABLE_NAME");
-                changeTableName = replaceUnderLineAndUpperCase(tableName);
+                vueComponentName = tableName.toLowerCase().replace(this.tablesuffix,"").replace("_","-");
+                changeTableName = underline2Camel(tableName,true);
                 tableAnnotation = tables.getString("REMARKS") == null ? "" : tables.getString("REMARKS");
-                generate();
+                filedPreix = tableName.toLowerCase().replace(this.tablesuffix,"").replace(this.modular+"_","");
+                if(tableNames==null||this.tableNames.size()<=0||this.tableNames.contains(tableName)){
+                    generate();
+                }
             }
+            generateMainConfig();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,26 +118,80 @@ public class GenerateServiceImpl implements GenerateService {
             // 生成Model文件
             generateModelFile(getResultSet());
             // 生成Mapper文件
-            generateMapperXMLFile(getResultSet());
+//            generateMapperXMLFile(getResultSet());
             // 生成Dao文件
             generateMapperFile(getResultSet());
             ////// // 生成服务层接口文件
             generateServiceInterfaceFile(getResultSet());
             ////// // 生成服务实现层文件
             generateServiceImplFile(getResultSet());
-            //配置文件
-            generatePropertiesFile();
-            //配置文件
-            generatePomFile();
-            //主函数
-            generateMain();
-            //主函数
-            generateConfig();
+            // 生成 vue界面
+            generateVueIndex(getResultSet());
+            generateVueAddIndex(getResultSet());
+            generateVueApiIndex(getResultSet());
+            //生成权限菜单
+            generateSql(getResultSet());
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
 
         }
+    }
+
+    private void generateSql(ResultSet resultSet) throws Exception {
+        final String suffix = underline2Camel(tableName,false)+".sql";
+//        String path = diskPath + "java" + getPathByPackName() + "//web//api";
+        String path = diskPath + "resources"  + File.separator + "sql";
+        //createFile(path);
+        path = path + File.separator + underline2Camel(tableName,false) +File.separator+ suffix;
+        final String templateName = "sql.ftl";
+        File mapperFile = new File(path);
+        Map<String, Object> dataMap = new HashMap<>();
+        List<ColumnClass> columnClassList = getColumnList(resultSet);
+        dataMap.put("model_column", columnClassList);
+        generateFileByTemplate(templateName, mapperFile, dataMap);
+    }
+
+    private void generateVueApiIndex(ResultSet resultSet) throws Exception {
+        final String suffix = underline2Camel(tableName,false)+".js";
+//        String path = diskPath + "java" + getPathByPackName() + "//web//api";
+        String path = diskPath + "resources"  + File.separator + "js";
+        //createFile(path);
+        path = path + File.separator + underline2Camel(tableName,false) +File.separator+ suffix;
+        final String templateName = "api.ftl";
+        File mapperFile = new File(path);
+        Map<String, Object> dataMap = new HashMap<>();
+        List<ColumnClass> columnClassList = getColumnList(resultSet);
+        dataMap.put("model_column", columnClassList);
+        generateFileByTemplate(templateName, mapperFile, dataMap);
+    }
+
+    private void generateVueAddIndex(ResultSet resultSet) throws Exception {
+        final String suffix = "index.vue";
+//        String path = diskPath + "java" + getPathByPackName() + "//web//api";
+        String path = diskPath + "resources"  + File.separator + "vue";
+        //createFile(path);
+        path = path + File.separator + underline2Camel(tableName,false) +File.separator+"add"+File.separator+ suffix;
+        final String templateName = "vueadd.ftl";
+        File mapperFile = new File(path);
+        Map<String, Object> dataMap = new HashMap<>();
+        List<ColumnClass> columnClassList = getColumnList(resultSet);
+        dataMap.put("model_column", columnClassList);
+        generateFileByTemplate(templateName, mapperFile, dataMap);
+    }
+
+    /**
+     * 生成配置信息 主函数 pom等一系列信息
+     */
+    private void generateMainConfig() throws Exception {
+        //配置文件
+        generatePropertiesFile();
+        //配置文件
+        generatePomFile();
+        //主函数
+        generateMain();
+        //主函数
+        generateConfig();
     }
 
     private void generateConfig() throws Exception{
@@ -193,6 +264,21 @@ public class GenerateServiceImpl implements GenerateService {
         generateFileByTemplate(templateName, mapperFile, dataMap);
     }
 
+    private void generateVueIndex(ResultSet resultSet) throws Exception {
+        final String suffix = "index.vue";
+//        String path = diskPath + "java" + getPathByPackName() + "//web//api";
+        String path = diskPath + "resources"  + File.separator + "vue";
+        //createFile(path);
+        path = path + File.separator + underline2Camel(tableName,false) +File.separator+ suffix;
+        final String templateName = "vue.ftl";
+        File mapperFile = new File(path);
+        Map<String, Object> dataMap = new HashMap<>();
+        List<ColumnClass> columnClassList = getColumnList(resultSet);
+        dataMap.put("model_column", columnClassList);
+        generateFileByTemplate(templateName, mapperFile, dataMap);
+    }
+
+
     private void generatePropertiesFile() throws IOException {
         StringWriter sw=new StringWriter();
         sw.write("spring.datasource.url="+this.URL);
@@ -219,7 +305,7 @@ public class GenerateServiceImpl implements GenerateService {
         String path = diskPath + "resources" + File.separator + "application.properties";
         StringWriter sw_main=new StringWriter();
         sw_main.write("spring.profiles.active=dev");
-        createFileToZip(sw_main,getRelativePath(path_prod));
+        createFileToZip(sw_main,getRelativePath(path));
     }
 
 
@@ -332,11 +418,14 @@ public class GenerateServiceImpl implements GenerateService {
         Template template = FreeMarkerTemplateUtils.getTemplate(templateName);
         dataMap.put("table_name_small", tableName);
         dataMap.put("table_name", changeTableName);
+        dataMap.put("vue_component_name", vueComponentName);
         dataMap.put("author", AUTHOR);
         dataMap.put("date", CURRENT_DATE);
         dataMap.put("package_name", packageName);
+        dataMap.put("modular", modular);
         dataMap.put("table_annotation", tableAnnotation);
         dataMap.put("company", company);
+        dataMap.put("filedPreix", filedPreix);
         StringWriter sw = new StringWriter();
         template.process(dataMap, sw);
         //加入压缩文件中
@@ -352,16 +441,20 @@ public class GenerateServiceImpl implements GenerateService {
         ColumnClass columnClass = null;
         // 当前表中所有外键
         List<String> list = new ArrayList<>();
+        List<String> baseFiledList = Arrays.asList(baseFileds);
         while (resultSet.next()) {
             // 基类字段略过
             String columnname = resultSet.getString("COLUMN_NAME");
+            if(baseFiledList.contains(columnname.toLowerCase())){
+                continue;
+            }
             columnClass = new ColumnClass();
             // 获取字段名称
             columnClass.setColumnName(resultSet.getString("COLUMN_NAME"));
             // 获取字段类型
             columnClass.setColumnType(resultSet.getString("TYPE_NAME").toUpperCase());
             // 转换字段名称，如 sys_name 变成 SysName
-            columnClass.setChangeColumnName(replaceUnderLineAndUpperCase(resultSet.getString("COLUMN_NAME")));
+            columnClass.setChangeColumnName(underline2Camel(resultSet.getString("COLUMN_NAME")));
             // 字段在数据库的注释
             columnClass.setColumnComment(resultSet.getString("REMARKS"));
             // 字段在数据库的长度
@@ -381,7 +474,7 @@ public class GenerateServiceImpl implements GenerateService {
         List<ImportColumn> list = new ArrayList<ImportColumn>();
         while (resultSet.next()) {
             ImportColumn im = new ImportColumn();
-            im.setImportTable(replaceUnderLineAndUpperCase(resultSet.getString(3)));
+            im.setImportTable(underline2Camel(resultSet.getString(3),true));
             im.setImportTable_small(resultSet.getString(3));
             im.setImportColumn(resultSet.getString(4));
             im.setLocalColumn(resultSet.getString(8));
@@ -466,5 +559,64 @@ public class GenerateServiceImpl implements GenerateService {
             }
         }
         return StringUtils.capitalize(result);
+    }
+
+    /**
+     * 下划线转换为驼峰
+     *
+     * @param line 下划线字符串
+     * @param firstIsUpperCase 首字母是否转换为大写
+     * @return
+     */
+    private String underline2Camel(String line, boolean ... firstIsUpperCase) {
+        line = line.toLowerCase();
+        if (line.contains(this.tablesuffix)) {
+            line = line.replaceAll(this.tablesuffix, "").toLowerCase();
+        }
+        String str = "";
+
+        if(StringUtils.isBlank(line)){
+            return str;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            String [] strArr;
+            // 不包含下划线，且第二个参数是空的
+            if(!line.contains("_") && firstIsUpperCase.length == 0){
+                sb.append(line.substring(0, 1).toLowerCase()).append(line.substring(1));
+                str = sb.toString();
+            } else if (!line.contains("_") && firstIsUpperCase.length != 0){
+                if (!firstIsUpperCase[0]) {
+                    sb.append(line.substring(0, 1).toLowerCase()).append(line.substring(1));
+                    str = sb.toString();
+                } else {
+                    sb.append(line.substring(0, 1).toUpperCase()).append(line.substring(1));
+                    str = sb.toString();
+                }
+            } else if (line.contains("_") && firstIsUpperCase.length == 0) {
+                strArr = line.split("_");
+                for (String s : strArr) {
+                    sb.append(s.substring(0, 1).toUpperCase()).append(s.substring(1));
+                }
+                str = sb.toString();
+                str = str.substring(0, 1).toLowerCase() + str.substring(1);
+            } else if (line.contains("_") && firstIsUpperCase.length != 0) {
+                strArr = line.split("_");
+                for (String s : strArr) {
+                    sb.append(s.substring(0, 1).toUpperCase()).append(s.substring(1));
+                }
+                if (!firstIsUpperCase[0]) {
+                    str = sb.toString();
+                    str = str.substring(0, 1).toLowerCase() + str.substring(1);
+                } else {
+                    str = sb.toString();
+                }
+            }
+        }
+        return str;
+    }
+
+    public static void main(String[] args) {
+        GenerateServiceImpl generateService=new GenerateServiceImpl();
+        System.out.println(generateService.underline2Camel("hx_test_de",true));
     }
 }

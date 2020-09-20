@@ -21,38 +21,48 @@
         <div class="form-group">
             <label class="col-sm-2 control-label" for="ip">主机名</label>
             <div class="col-sm-4">
-                <input class="form-control" id="ip" name="ip" type="text" value="localhost"/>
+                <input class="form-control" id="ip" name="ip" type="text" th:field="*{ip}"/>
             </div>
             <label class="col-sm-2 control-label" for="database">数据库名</label>
             <div class="col-sm-4">
-                <input class="form-control" id="database" name="database" type="text" value="test"/>
+                <input class="form-control" id="database" name="database" type="text" th:field="*{database}"/>
             </div>
         </div>
         <div class="form-group">
             <label class="col-sm-2 control-label" for="user">用户名</label>
             <div class="col-sm-4">
-                <input class="form-control" id="user" name="user" type="text" value="root"/>
+                <input class="form-control" id="user" name="user" type="text" th:field="*{user}"/>
             </div>
             <label class="col-sm-2 control-label" for="password">密码</label>
             <div class="col-sm-4">
-                <input class="form-control" id="password" name="password" type="password" value="123456"/>
+                <input class="form-control" id="password" name="password" type="text" th:field="*{password}"/>
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="driver">驱动</label>
             <div class="col-sm-4">
-                <input class="form-control" id="driver" name="driver" type="text" value="com.mysql.cj.jdbc.Driver"/>
+                <input class="form-control" id="driver" name="driver" type="text" th:field="*{driver}"/>
             </div>
             <label class="col-sm-2 control-label" for="password">端口</label>
             <div class="col-sm-4">
-                <input class="form-control" id="port" name="port" type="text" value="3306"/>
+                <input class="form-control" id="port" name="port" type="text" th:field="*{port}"/>
             </div>
         </div>
         <div class="form-group">
+            <label class="col-sm-2 control-label" for="driver">表名</label>
+            <div class="col-sm-4">
+                <input class="form-control" id="tables" name="tables"  type="text" th:field="*{tables}"/>
+            </div>
             <label class="col-sm-2 control-label" for="driver">表名前缀</label>
             <div class="col-sm-4">
-                <input class="form-control" id="tablesuffix" name="tablesuffix"  type="tablesuffix" value=""/>
+                <input class="form-control" id="tablesuffix" name="tablesuffix"  type="text" th:field="*{tablesuffix}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="modular">模块名</label>
+            <div class="col-sm-4">
+                <input class="form-control" id="modular" name="modular"  type="text" th:field="*{modular}"/>
             </div>
         </div>
     </fieldset>
@@ -63,32 +73,32 @@
         <div class="form-group">
             <label class="col-sm-2 control-label" for="author">作者</label>
             <div class="col-sm-4">
-                <input class="form-control" id="author" name="author" type="text" value="sky"/>
+                <input class="form-control" id="author" name="author" type="text" th:field="*{author}"/>
             </div>
             <label class="col-sm-2 control-label" for="company">公司名称</label>
             <div class="col-sm-4">
-                <input class="form-control" id="company" name="company" type="text" value="广州禾信仪器股份有限公司"/>
+                <input class="form-control" id="company" name="company" type="text" th:field="*{company}"/>
             </div>
         </div>
         <div class="form-group">
             <label class="col-sm-2 control-label" for="packagename">包名</label>
             <div class="col-sm-4">
-                <input class="form-control" id="packagename" name="packagename" type="text" value="com.xj"/>
+                <input class="form-control" id="packagename" name="packagename" type="text" th:field="*{packagename}"/>
             </div>
             <label class="col-sm-2 control-label" for="description">描述</label>
             <div class="col-sm-4">
-                <input class="form-control" id="description" name="description" type="text" value="描述"/>
+                <input class="form-control" id="description" name="description" type="text" th:field="*{description}"/>
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label" for="groupId">groupId</label>
             <div class="col-sm-4">
-                <input class="form-control" id="groupId" name="groupId" type="text" value="com.xj"/>
+                <input class="form-control" id="groupId" name="groupId" type="text" th:field="*{groupId}"/>
             </div>
             <label class="col-sm-2 control-label" for="artifactId">artifactId</label>
             <div class="col-sm-4">
-                <input class="form-control" id="artifactId" name="artifactId" type="text" value="test"/>
+                <input class="form-control" id="artifactId" name="artifactId" type="text" th:field="*{artifactId}"/>
             </div>
         </div>
     </fieldset>
@@ -108,7 +118,7 @@
     <fieldset>
         <div class="form-group">
             <div class="col-md-offset-2 col-md-8">
-                <button type="submit" class="btn">添加</button>
+                <button type="submit" class="btn">生成</button>
             </div>
         </div>
     </fieldset>

@@ -17,8 +17,9 @@ import ${package_name}.entity.${table_name};
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.springframework.stereotype.Repository;
 
-
+@Repository
 public interface ${table_name}Mapper extends BaseMapper<${table_name}>{
 
 }

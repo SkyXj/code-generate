@@ -18,6 +18,8 @@ public class GenerateProperties {
 	private String tablesuffix;
 	private String groupId;
 	private String artifactId;
+	private String tables;
+	private String modular;
 
 	public String getUrl(){
 		return "jdbc:mysql://"+this.ip+":"+port+"/"+database+"?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT";
